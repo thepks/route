@@ -1,0 +1,25 @@
+{
+  "ServiceId": "com.ibm.cloudoe.orion.client.deploy",
+  "Params": {
+    "Target": {
+      "Url": "https://api.eu-gb.bluemix.net",
+      "Org": "thepksgp@gmail.com",
+      "Space": "dev"
+    },
+    "Name": "route",
+    "Instrumentation": {},
+    "DevMode": {
+      "Instrumentation": {
+        "env": {
+          "ENABLE_BLUEMIX_DEV_MODE": true
+        },
+        "command": "",
+        "memory": "64MB"
+      },
+      "Packager": "com.ibm.perfectstorm.cloudoe.packager.LiveEditDeploymentPackager",
+      "On": false
+    }
+  },
+  "Path": "",
+  "Type": "Cloud Foundry"
+}
