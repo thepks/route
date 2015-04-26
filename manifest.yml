@@ -1,0 +1,10 @@
+applications:
+- services:
+  - Cloudant NoSQL DB-vt
+  disk_quota: 1024M
+  host: route
+  name: route
+  path: .
+  domain: eu-gb.mybluemix.net
+  instances: 1
+  memory: 64M
