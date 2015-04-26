@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Trace Analysis</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+<!--        <link rel="stylesheet" href="../styles/Vendor/bootstrap.min.css"> -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+        
+        <link rel="stylesheet" type="text/css" href="../styles/analysis.css" />
+        <script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+        
+<!--         <script src="../scripts/Vendor/angular.min.js"></script>
+        <script src="../scripts/Vendor/jquery.min.js"></script>
+        <script src="../scripts/Vendor/bootstrap.min.js"></script> -->
+        
+<!--        <script type="text/javascript" src="../scripts/stack.js"></script> -->
+        <script type="text/javascript" src="../scripts/message-log-service.js"></script>
+        <script type="text/javascript" src="../scripts/message-directive.js"></script>
+        <script type="text/javascript" src="../scripts/FileReaderService.js"></script>
+        <script type="text/javascript" src="../scripts/FileReaderDirective.js"></script>
+        <script type="text/javascript" src="../scripts/traceAnalysisService.js"></script>
+<script type="text/javascript" src="../scripts/node-template-service.js"></script>        
+        <script type="text/javascript" src="../scripts/node-visualisation-directive.js"></script>
+        <script type="text/javascript" src="../scripts/broadcast-service.js"></script>
+        <script type="text/javascript" src="../scripts/app.js"></script>
+    </head>
+    <body ng-app="traceAnalyser" ng-controller="analysisController as analysis" ng-csp>
+        <main id="analysisPage">
+            <section id="traceUpload">
+                <form role="form" id="analysisForm" novalidate>
+                    <section>
+                        <div id="load">
+                             <h3>Select file of trace data to analyse</h3>
+
+                            <div class="row form-group"> 
+                            <span class="col-sm-3">
+                                <label for="importFile"  >Trace file</label>
+                                <file-reader id="importFile" name="importFile" class="form-control" on-change="readFile()" text="analysis.result" />
+                            </span>
+                            <span class="col-sm-2">
+                            <br/>  
+                            <button type="button" class="btn btn-primary" id="parse-button" ng-click="analysis.getStackData()" ng-show="analysis.is_file_read()">Parse</button>
+                            <button type="button" class="btn btn-primary" id="display-button" ng-click="analysis.display_result()" ng-show="analysis.is_ready()">Display</button>
+                            </span>
+                <span class="col-sm-3" ng-show="analysis.is_parsed()">
+                <label for="measurement">Measurement</label>
+                                <select id="measurement" class="form-control" ng-model="analysis.measurement" 
+                                ng-options="n for n in analysis.get_measurements()">
+                                    </select>
+                </span>
+                            <span class="col-sm-2">
+                            <label for="threshold" >Threshold</label>
+                            <input type="text" id="threshold" ng-model="analysis.threshold" class="form-control" ></input>
+                            </span>
+                            <span class="col-sm-2">
+                            <label for="threshold" >Reduction Level</label>
+                            <input type="text" id="reduction" ng-model="analysis.reduction" class="form-control" ></input>
+                            </span>
+                            </div>
+                        </div>
+                    </section>
+                </form>
+            </section>
+ 
+            <section>
+                <node-visualisation type="partition" instance="analysis" height="1200" width="1400"></node-visualisation>
+            </section>
+        </main>
+    </body>
+</html>

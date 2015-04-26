@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Job Analysis</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="../styles/job.css" />
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="../scripts/upload.js"></script>
+        <script type="text/javascript" src="../scripts/job-graphs.js"></script>
+        <script type="text/javascript" src="../scripts/job-data-services.js"></script>
+        <script type="text/javascript" src="../scripts/message-log-service.js"></script>
+        <script type="text/javascript" src="../scripts/message-directive.js"></script>  
+        <script type="text/javascript" src="../scripts/FileReaderService.js"></script>
+        <script type="text/javascript" src="../scripts/FileReaderDirective.js"></script>
+        <script type="text/javascript" src="../scripts/app.js"></script>
+        <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+        <script type="text/javascript">
+            google.load('visualization', '1.0', {'packages':['corechart', 'table'], 'callback' : function () {console.log('loaded google charts');}});
+        </script>
+    </head>
+    <body ng-app="jobAnalyser" ng-controller="JobController as job">
+        <main id="jobPage">
+            <nav class="navbar navbar-inverse">
+                <div class="container-fluid">
+                    <div class="navbar-header">
+                        <a class="navbar-brand" href="#" id="aboutEvt" ng-click="job.setOption(0)">Job Analysis</a>
+                    </div>
+                    <div>
+                        <ul class="nav navbar-nav">
+                            <li class="active">
+                                <a href="#" id="homeEvt" ng-click="job.setOption(1)">Home</a>
+                            </li>
+                            <li ng-show="job.logged_on">
+                                <a href="#" id="loadEvt" ng-click="job.setOption(2)">Upload</a>
+                            </li>
+                            <li ng-show="job.logged_on">
+                                <a href="#" id="historyEvt" ng-click="job.setOption(3)">Job Summary</a>
+                            </li>
+                            <li ng-show="job.logged_on">
+                                <a href="#" id="variabilityEvt" ng-click="job.setOption(4)">Variability</a>
+                            </li>
+                            <li ng-show="job.logged_on">
+                                <a href="#" id="degradationEvt" ng-click="job.setOption(5)">Trends</a>
+                            </li>
+                            <li ng-show="job.isAdmin()">
+                                <a href="#" id="adminUserEvt" ng-click="job.setOption(10)">Users</a>
+                            </li>
+                        </ul>
+                        <ul class="nav navbar-nav navbar-right">
+                            <li ng-hide="job.logged_on">
+                                <a href="#" id="logonEvt" ng-click="job.setOption(7)"><span class="glyphicon glyphicon-log-in"></span> Login</a>
+                            </li>
+                            <li ng-show="job.logged_on">
+                                <a href="#" id="logoffEvt" ng-click="job.logoff()"><span class="glyphicon glyphicon-log-out"></span> Logout</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+            <message-log></message-log>
+            <section id="about" ng-show="job.isOption(0)">
+                <div class="jumbotron">
+                     <h3>Job Analysis</h3>
+
+                    <p>Use this site to upload and review performance of jobs.</p>
+                    <p>The load function takes the mailed spool output from job /ssa/btc in html format.</p>
+                    <p>Standard users are only able to see details for jobs that they have uploaded.</p>
+                </div>
+            </section>
+            <section id="job" ng-show="job.isOption(2)">
+                <form role="form" id="uploadForm" ng-controller="UploadController as uploadCtrl" novalidate>
+                    <section>
+                        <div id="load" class="jumbotron">
+                             <h3>Select file of job data to upload</h3>
+
+                            <div class="form-group">
+                                <label for="importFile">Job file to load</label>
+                                <file-reader id="importFile" name="importFile" class="form-control" on-change="readFile()" text="uploadCtrl.file_upload" />
+                            </div>
+                            <button type="button" class="btn btn-primary" ng-click="uploadCtrl.upload()">Upload</button>
+                             <h5 id="load-feedback" class="load-feedback"></h5>
+
+                        </div>
+                    </section>
+                </form>
+            </section>
+            <section ng-show="job.isOption(3)" ng-controller="HistoryController as historyCtrl">
+                <form role="form" id="jobHistory" novalidate>
+                    <div id="history-form" class="jumbotron">
+                         <h3 id='history-form-title'>Select program details to be displayed</h3>
+
+                        <div class="row form-group"> <span class="col-sm-6">
+                      <label for="startDate">Start Date</label>
+                    <input type="date" id="startDate" name="startDate" class="form-control" ng-model="historyCtrl.historyFormData.fromDate" />
+                  </span>
+ <span class="col-sm-6">
+                      <label for="endDate">End Date</label>
+                    <input type="date" id="endDate" name="endDate" class="form-control" ng-model="historyCtrl.historyFormData.toDate"/>
+                  </span>
+
+                        </div>
+                        <div class="row form-group"> <span class="col-sm-6">
+                    <span id='program-sect'>
+                      <label for="program_name">Program</label>
+                      <select class="form-control" name="program-name" id="program-name" ng-model="historyCtrl.historyFormData.program" 
+                      ng-options="n for n in historyCtrl.program_names()">
+                          </select>
+                    </span>
+
+                             <h5 id="form-val-message" class="form-val-message">A program name is required</h5>
+
+                            </span> <span class="col-sm-3">
+                    <button type="button" class="btn btn-primary" id="analysis-button" ng-click="historyCtrl.history()">Load</button>
+                  </span>
+ <span class="col-sm-3">&nbsp;</span>
+
+                        </div>
+                    </div>
+                    </div>
+                </form>
+                <section ng-show="job.isOption(3) && historyCtrl.job_data">
+                    <section>
+                        <div>
+                            <p>Overall Job Duration</p>
+                        </div>
+                        <div id="summary-history"></div>
+                    </section>
+                    <section>
+                        <div>
+                            <p>Overview of job variability, high variability is usually a bad sign</p>
+                        </div>
+                        <div id="summary-results"></div>
+                    </section>
+                    <section>
+                        <div>
+                            <p>Overview of job processing characteristics. Abap over 30% is usually a bad sign, DB may be as much as 98% and not be a problem.</p>
+                        </div>
+                        <div id="summary-processing"></div>
+                    </section>
+                    <section>
+                        <div>
+                            <p>Overview of job parallel execution, look for consistent work process number use</p>
+                        </div>
+                        <div id="summary-parallel"></div>
+                    </section>
+                </section>
+            </section>
+            <section ng-show="job.isOption(4)" ng-controller="VariabilityController as variabilityCtrl">
+                <form role="form" id="jobVariability" novalidate>
+                    <div id="variability-form" class="jumbotron">
+                         <h3 id='history-form-title'>Select program details to be displayed</h3>
+
+                        <div class="row form-group"> <span class="col-sm-6">
+                                 <label for="startDate">Start Date</label>
+                               <input type="date" id="startDate" name="startDate" class="form-control" ng-model="variabilityCtrl.historyFormData.fromDate" />
+                             </span>
+ <span class="col-sm-6">
+                                 <label for="endDate">End Date</label>
+                               <input type="date" id="endDate" name="endDate" class="form-control" ng-model="variabilityCtrl.historyFormData.toDate"/>
+                             </span>
+
+                        </div>
+                        <div class="row form-group"> <span class="col-sm-3">
+                                <label for="programType">Program Type</label>
+                                <select name="programType" id="programType" class="form-control" ng-model="variabilityCtrl.historyFormData.programType" 
+                                ng-options="n for n in variabilityCtrl.program_types()">
+                                    </select>
+                            </span>
+                            <span class="col-sm-3">
+                                <span ng-show="variabilityCtrl.isNamespace()">
+                                    <label for="namespace">Namespace</label>
+                                    <input type="text" id="namespace" class="form-control" ng-model="variabilityCtrl.historyFormData.namespace">&nbsp;
+                                </span>
+                                    &nbsp;
+                            </span> 
+                            <span class="col-sm-3">
+                                <span ng-show="job.isAdmin()">
+                                    <label for="company">Company</label>
+                                    <input type="text" id="company" class="form-control" ng-model="variabilityCtrl.historyFormData.company">&nbsp;
+                                </span>
+                                    &nbsp;
+                            </span> 
+
+                            <span class="col-sm-3">&nbsp;</span>
+                        </div>                        
+                        
+                        
+                        <div class- "row form-group"> <span class="col-sm-3">
+                                <button type="button" class="btn btn-primary" id="variability-button" ng-click="variabilityCtrl.history()">Display</button>
+                             </span>
+ <span class="col-sm-9">&nbsp;</span>
+
+                        </div>
+                    </div>
+                </form>
+                <section ng-show="job.isOption(4) && variabilityCtrl.job_data">
+                        <div>
+                            <p>Overview of job variability, high variability is usually a bad sign</p>
+                        </div>
+                        <div id="variability-results"></div>
+                </section>
+            </section>
+            <section ng-show="job.isOption(5)" ng-controller="ChangeController as changeCtrl">
+                <form role="form" id="jobChange" novalidate>
+                    <div id="change-form" class="jumbotron">
+                         <h3 id='history-form-title'>Select program details to be displayed</h3>
+
+                        <div class="row form-group"> <span class="col-sm-6">
+                                                     <label for="startDate">Start Date</label>
+                                                   <input type="date" id="startDate" name="startDate" class="form-control" ng-model="changeCtrl.historyFormData.fromDate" />
+                                                 </span>
+ <span class="col-sm-6">
+                                                     <label for="endDate">End Date</label>
+                                                   <input type="date" id="endDate" name="endDate" class="form-control" ng-model="changeCtrl.historyFormData.toDate"/>
+                                                 </span>
+
+                        </div>
+                        <div class="row form-group"> <span class="col-sm-3">
+                                <label for="programType">Program Type</label>
+                                <select name="programType" id="programType" class="form-control" ng-model="changeCtrl.historyFormData.programType" 
+                                ng-options="n for n in changeCtrl.program_types()">
+                                    </select>
+                            </span>
+                            <span class="col-sm-3">
+                                <span ng-show="changeCtrl.isNamespace()">
+                                    <label for="namespace">Namespace</label>
+                                    <input type="text" id="namespace" class="form-control" ng-model="changeCtrl.historyFormData.namespace">&nbsp;
+                                </span>
+                                    &nbsp;
+                            </span> 
+                            <span class="col-sm-3">
+                                <span ng-show="job.isAdmin()">
+                                    <label for="company">Company</label>
+                                    <input type="text" id="company" class="form-control" ng-model="changeCtrl.historyFormData.company">&nbsp;
+                                </span>
+                                    &nbsp;
+                            </span> 
+
+                            <span class="col-sm-3">&nbsp;</span>
+
+                        </div>
+
+                        <div class="row form-group"> <span class="col-sm-3">
+                                <button type="button" class="btn btn-primary" id="variability-button" ng-click="changeCtrl.history()">Display</button>
+                            </span>
+ <span class="col-sm-3">&nbsp;</span>
+
+<span class="col-sm-6">&nbsp;</span>
+
+                    </div>
+                    </div>
+                </form>
+                <section ng-show="job.isOption(5) && changeCtrl.job_data">
+                    <div>
+                        <p>Analysis of change by week, greater than zero increasing, less than zero reducing.</p>
+                    </div>
+                    <div id="summary-reduce"></div>
+                </section>
+            </section>
+            <section ng-show="job.isOption(7)">
+                <div id="authentication" class="container">
+                    <form role="form" id="logon" novalidate>
+                        <div class="row form-group"> <span class="col-sm-6">&nbsp;</span>
+ <span class="col-sm-3">
+                      <label for="username">Id</label>
+                    <input type="text" id="username" name="username" class="form-control" ng-model="job.username"/>
+                  </span>
+ <span class="col-sm-3">
+                      <label for="password">Password</label>
+                    <input type="password" id="password" name="password" class="form-control" ng-model="job.password" />
+                  </span>
+
+                        </div>
+                        <div class="row form-group"> <span class="col-sm-9">&nbsp;</span>
+ <span class="col-sm-3">
+                    <button type="button" class="btn btn-primary" id="authButton" ng-click="job.logon()"><span class="glyphicon glyphicon-log-in"></span> Login</button>
+                            </span>
+                        </div>
+                        <div class="row" ng-show="job.isErrorLogon()"> <span class="col-sm-9">&nbsp;</span>
+ <span class="col-sm-3">
+                    <h5 id="auth-results" class="auth-results" ng-model="job.logon_error_message">Logon Failed!</h5>
+                  </span>
+
+                        </div>
+                    </form>
+                </div>
+            </section>
+            <section id="userAdminSection" ng-show="job.isOption(10)" ng-controller="jobAdminController as adminCtrl">
+                <div id="userAdmin" class="container">
+                    <form role="form" id="userAdmin" novalidate>
+                        <div class="row form-group"> 
+                        <span class="col-sm-9">
+                            <label for="searchuser">User</label>
+                                <input type="text" id="searchuser" name="searchuser" class="form-control" ng-model="adminCtrl.searchuser"/>
+                                <button type="button" class="btn btn-primary" id="adminUserSearchButton" ng-click="adminCtrl.search()"><span class="glyphicon glyphicon-search"></span> Search</button>
+                                <button type="button" class="btn" id="adminUserNewButton" ng-click="adminCtrl.setOption(1)"><span class="glyphicon glyphicon-user"></span> New User</button>
+                        </span>
+                        <span class="col-sm-3">&nbsp;</span>
+                        </div>
+                    </form>
+                </div>
+                <section ng-show="adminCtrl.isOption(1)">
+                    <form role="form" id="userAdminNew" novalidate>
+                        <div class="row form-group"> 
+                        <span class="col-sm-12">
+                            <label for="newuser">User</label>
+                                <input type="text" id="newuser" name="newuser" class="form-control" ng-model="adminCtrl.newuser" required/>
+                            <label for="newuserpwd">Password (Post SHA1 Hash)</label>
+                                <input type="password" id="newuserpwd" name="newuserpwd" class="form-control" ng-model="adminCtrl.newuserpwd" required/>
+                            <label for="newuser">Company</label>
+                                <input type="text" id="newusercompany" name="newusercompany" class="form-control" ng-model="adminCtrl.newusercompany" required/>
+                        </span>
+                        </div>
+                        <div class="row form-group"> 
+                        <span class="col-sm-12">
+                                <button type="button" class="btn btn-primary" id="adminUserCreateButton" ng-click="adminCtrl.create()"><span class="glyphicon glyphicon-user"></span> Create User</button>
+                        </span>
+                        </div>
+                    </form>
+                </section>
+                <section ng-show="adminCtrl.isOption(2)" class="container">
+                    <h4 ng-repeat="user in adminCtrl.users" class="row"> 
+                            <a href="#" ng-click="adminCtrl.edit(user)">
+                              <span class="glyphicon glyphicon-pencil"></span>
+                            </a>&nbsp;
+                        
+                            <a href="#" ng-click="adminCtrl.delete(user)">
+                              <span class="glyphicon glyphicon-trash"></span>
+                            </a>&nbsp;
+                            
+                            {{user.doc.name}}
+                            
+                    </h4>
+                </section>
+                <section ng-show="adminCtrl.isOption(3)" class="container">
+                    <form role="form" id="userAdminNew" novalidate>
+                        <div class="row form-group"> 
+                        <span class="col-sm-6">
+                            <h4> {{ adminCtrl.currentUser.doc.name }}</h4>
+                            <label for="edituserpwd">Password (Post SHA1 Hash)</label>
+                                <input type="password" id="edituserpwd" name="edituserpwd" class="form-control" ng-model="adminCtrl.currentUser.password"/>
+                            <label for="edituserpwd2">Repeat Password</label>
+                            <input type="password" id="edituserpwd2" name="edituserpwd2" class="form-control" ng-model="adminCtrl.currentUser.password2" />
+    
+                            <label for="edituser">Company</label>
+                                <input type="text" id="editusercompany" name="newusercompany" class="form-control" ng-model="adminCtrl.currentUser.doc.roles[0]" />
+                        </span>
+                        <span class="col-sm-6">&nbsp;</span>
+                        </div>
+                        <div class="row form-group"> 
+                        <span class="col-sm-12">
+                                <button type="button" class="btn btn-primary" id="adminUserEditButton" ng-click="adminCtrl.update()"><span class="glyphicon glyphicon-user"></span> Update User</button>
+                        </span>
+                        </div>
+                    </form>
+                </section>
+                <section ng-show="adminCtrl.isOption(4)" class="container">
+                    <h4> {{ adminCtrl.currentUser.doc.name }}</h4>
+                    <form role="form" id="userAdminDelete" novalidate>
+                            <button type="button" class="btn btn-primary" id="adminUserDeleteButton" ng-click="adminCtrl.remove()"><span class="glyphicon glyphicon-trashr"></span> Delete User</button>
+                    </form>
+                </section>
+            </section>
+
+    </body>
+</html>

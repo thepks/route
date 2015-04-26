@@ -1,0 +1,5 @@
+<section ng-show="messageLogCtrl.isVisible()">
+    <p ng-repeat="message in messageLogCtrl.displayMessages(5)" class="feedback">{{message}}</p>
+    <button type="button" class="btn btn-primary btn-xsm" id="clearMessages" ng-click="messageLogCtrl.clearMessages()">Clear Messages</button>
+    <button type="button" class="btn btn-primary btn-xsm" id="hideMessages" ng-click="messageLogCtrl.hideMessages()">Hide Messages</button>
+</section>
